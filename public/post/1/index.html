@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <script type="application/javascript" src='https://b.0721.me/js/theme-mode.js'></script>
+    <link rel="stylesheet" href='https://b.0721.me/css/frameworks.min.css' />
+    <link rel="stylesheet" href='https://b.0721.me/css/github.min.css' />
+    <link rel="stylesheet" href='https://b.0721.me/css/github-style.css' />
+    <link rel="stylesheet" href='https://b.0721.me/css/light.css' />
+    <link rel="stylesheet" href='https://b.0721.me/css/dark.css' />
+    <link rel="stylesheet" href='https://b.0721.me/css/syntax.css' />
+    <title>理解Rust和纯函数式语言的变量不可变性 - My Blog</title>
+    
+    <link rel="icon" type="image/x-icon" href='/images/avatar.png'>
+    
+    <meta name="theme-color" content="#1e2327">
+
+    
+    
+
+    
+    <meta name="description"
+  content="Rust与纯函数式编程的不可变性：超越内存的视角
+" />
+<meta name="keywords"
+  content='blog, google analytics' />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://b.0721.me/post/1/" />
+
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="理解Rust和纯函数式语言的变量不可变性 - My Blog" />
+<meta name="twitter:description"
+  content="Rust与纯函数式编程的不可变性：超越内存的视角
+" />
+<meta name="twitter:site" content="https://b.0721.me/" />
+<meta name="twitter:creator" content="" />
+<meta name="twitter:image"
+  content="https://b.0721.me/">
+
+
+<meta property="og:type" content="article" />
+<meta property="og:title" content="理解Rust和纯函数式语言的变量不可变性 - My Blog">
+<meta property="og:description"
+  content="Rust与纯函数式编程的不可变性：超越内存的视角
+" />
+<meta property="og:url" content="https://b.0721.me/post/1/" />
+<meta property="og:site_name" content="理解Rust和纯函数式语言的变量不可变性" />
+<meta property="og:image"
+  content="https://b.0721.me/">
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+<meta property="article:published_time" content="2025-10-26 15:36:57 &#43;0800 CST" />
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body>
+  <div style="position: relative">
+  <header class="Header js-details-container Details px-3 px-md-4 px-lg-5 flex-wrap flex-md-nowrap open Details--on">
+    <div class="Header-item mobile-none" style="margin-top: -4px; margin-bottom: -4px;">
+      <a class="Header-link" href="https://b.0721.me/">
+        <img class="octicon" height="32" width="32" src="/images/avatar.png">
+      </a>
+    </div>
+    <div class="Header-item d-md-none">
+      <button class="Header-link btn-link js-details-target" type="button"
+        onclick="document.querySelector('#header-search').style.display = document.querySelector('#header-search').style.display == 'none'? 'block': 'none'">
+        <svg height="24" class="octicon octicon-three-bars" viewBox="0 0 16 16" version="1.1" width="24">
+          <path fill-rule="evenodd" d="M1 2.75A.75.75 0 011.75 2h12.5a.75.75 0 110 1.5H1.75A.75.75 0 011 2.75zm0 5A.75.75 0 011.75 7h12.5a.75.75 0 110 1.5H1.75A.75.75 0 011 7.75zM1.75 12a.75.75 0 100 1.5h12.5a.75.75 0 100-1.5H1.75z">
+          </path>
+        </svg>
+      </button>
+    </div>
+    <div style="display: none;" id="header-search"
+      class="Header-item Header-item--full flex-column flex-md-row width-full flex-order-2 flex-md-order-none mr-0 mr-md-3 mt-3 mt-md-0 Details-content--hidden-not-important d-md-flex">
+      <div
+        class="Header-search header-search flex-auto js-site-search position-relative flex-self-stretch flex-md-self-auto mb-3 mb-md-0 mr-0 mr-md-3 scoped-search site-scoped-search js-jump-to">
+        <div class="position-relative">
+          
+          <form target="_blank" action="https://www.google.com/search" accept-charset="UTF-8" method="get"
+            autocomplete="off">
+            <label
+              class="Header-search-label form-control input-sm header-search-wrapper p-0 js-chromeless-input-container header-search-wrapper-jump-to position-relative d-flex flex-justify-between flex-items-center">
+              <input type="text"
+                class="Header-search-input form-control input-sm header-search-input jump-to-field js-jump-to-field js-site-search-focus js-site-search-field is-clearable"
+                name="q" value="" placeholder="Search" autocomplete="off">
+              <input type="hidden" name="q" value="site:https://b.0721.me/">
+            </label>
+          </form>
+          
+        </div>
+      </div>
+    </div>
+
+    <div class="Header-item Header-item--full flex-justify-center d-md-none position-relative">
+      <a class="Header-link " href="https://b.0721.me/">
+        <img class="octicon octicon-mark-github v-align-middle" height="32" width="32" src="/images/avatar.png">
+      </a>
+    </div>
+    <div class="Header-item" style="margin-right: 0;">
+      <a href="javascript:void(0)" class="Header-link no-select" onclick="switchTheme()">
+        <svg style="fill: var(--color-profile-color-modes-toggle-moon);" class="no-select" viewBox="0 0 16 16"
+          version="1.1" width="16" height="16">
+          <path fill-rule="evenodd" clip-rule="evenodd"
+            d="M4.52208 7.71754C7.5782 7.71754 10.0557 5.24006 10.0557 2.18394C10.0557 1.93498 10.0392 1.68986 10.0074 1.44961C9.95801 1.07727 10.3495 0.771159 10.6474 0.99992C12.1153 2.12716 13.0615 3.89999 13.0615 5.89383C13.0615 9.29958 10.3006 12.0605 6.89485 12.0605C3.95334 12.0605 1.49286 10.001 0.876728 7.24527C0.794841 6.87902 1.23668 6.65289 1.55321 6.85451C2.41106 7.40095 3.4296 7.71754 4.52208 7.71754Z">
+          </path>
+        </svg>
+      </a>
+    </div>
+  </header>
+</div>
+
+  <div id="search-result" class="container-lg px-3 new-discussion-timeline" style="display: none;">
+</div>
+
+  
+<div class="application-main">
+  <div>
+  <main>
+    <div class="gisthead pagehead bg-gray-light pb-0 pt-3 mb-4">
+      <div class="px-0">
+        <div class="mb-3 d-flex px-3 px-md-3 px-lg-5">
+          <div class="flex-auto min-width-0 width-fit mr-3">
+            <div class="d-flex">
+              <div class="d-none d-md-block">
+                <a class="avatar mr-2 flex-shrink-0" href="https://b.0721.me/">
+                  <img class=" avatar-user"
+                    src="/images/avatar.png"
+                    width="32" height="32"></a>
+              </div>
+              <div class="d-flex flex-column">
+                <h1 class="break-word f3 text-normal mb-md-0 mb-1">
+                  <span class="author">
+                    <a href="https://b.0721.me/">Fukege</a>
+                  </span>
+                  <span class="path-divider">/</span>
+                  <strong class="css-truncate css-truncate-target mr-1" style="max-width: 410px">
+                    <a href="https://b.0721.me/post/1/">理解Rust和纯函数式语言的变量不可变性</a>
+                  </strong>
+                </h1>
+                <div class="note m-0">
+                  Created <relative-time datetime="Sun, 26 Oct 2025 15:36:57 &#43;0800"
+                    class="no-wrap">
+                    Sun, 26 Oct 2025 15:36:57 &#43;0800</relative-time>
+
+                  
+                  <span class="file-info-divider"></span>
+                  Modified <relative-time datetime="Sun, 26 Oct 2025 15:36:57 &#43;0800"
+                    class="no-wrap">
+                    Sun, 26 Oct 2025 15:36:57 &#43;0800</relative-time>
+                  
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-lg px-3 new-discussion-timeline">
+      <div class="repository-content gist-content">
+        <div>
+          <div class="js-gist-file-update-container js-task-list-container file-box">
+            <div id="file-pytest" class="file my-2">
+              <div id="post-header" class="file-header d-flex flex-md-items-center flex-items-start sticky-header" style="z-index: 2">
+                <div class="file-info d-flex flex-md-items-center flex-items-start flex-order-1 flex-auto">
+                  <div class="text-mono f6 flex-auto pr-3 flex-order-2 flex-md-order-1 mt-2 mt-md-0">
+                    
+                    <summary id="toc-toggle" onclick="clickToc()" class="btn btn-octicon m-0 mr-2 p-2">
+                      <svg aria-hidden="true" viewBox="0 0 16 16" height="16" width="16" class="octicon octicon-list-unordered">
+                        <path fill-rule="evenodd" d="M2 4a1 1 0 100-2 1 1 0 000 2zm3.75-1.5a.75.75 0 000 1.5h8.5a.75.75 0 000-1.5h-8.5zm0 5a.75.75 0 000 1.5h8.5a.75.75 0 000-1.5h-8.5zm0 5a.75.75 0 000 1.5h8.5a.75.75 0 000-1.5h-8.5zM3 8a1 1 0 11-2 0 1 1 0 012 0zm-1 6a1 1 0 100-2 1 1 0 000 2z"></path>
+                      </svg>
+                    </summary>
+                    <details-menu class="SelectMenu" id="toc-details" style="display: none;">
+                      <div class="SelectMenu-modal rounded-3 mt-1" style="max-height: 340px;">
+                        <div class="SelectMenu-list SelectMenu-list--borderless p-2" style="overscroll-behavior: contain;" id="toc-list">
+                        </div>
+                      </div>
+                    </details-menu>
+                      2276 Words
+                    
+
+                  </div>
+                  <div class="file-actions flex-order-2 pt-0">
+                    
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="Box-body px-5 pb-5" style="z-index: 1">
+                <article class="markdown-body entry-content container-lg"><p>Rust与纯函数式编程的不可变性：超越内存的视角</p>
+<h3 id="rust与纯函数式编程的不可变性超越内存的视角">Rust与纯函数式编程的不可变性：超越内存的视角</h3>
+<p>当你第一次在Rust中遇到编译错误 <code>cannot assign twice to immutable variable</code> 时，你的直觉可能会告诉你：“这太不方便了！而且，如果我需要一个新值，就必须创建一个新的变量，这难道不是在浪费内存吗？”</p>
+<p>这个疑问非常合理，但它基于一个根深蒂固的假设：<strong>变量等同于一块可读写的内存</strong>。然而，在函数式编程和其启发的Rust中，这个假设需要被彻底颠覆。不可变性并非限制，而是一种解放——它将我们从内存的束缚中解放出来，赋予编译器上帝般的视角去执行我们无法想象的优化。</p>
+<h4 id="1-底层数学原理变量是标签而非盒子">1. 底层数学原理：变量是“标签”，而非“盒子”</h4>
+<p>在命令式编程中，我们习惯将变量想象成一个“盒子”（内存地址），我们可以随时更换里面的东西。</p>
+<p><code>let mut x = 5;</code> // 准备一个名为 x 的盒子，放入 5
+<code>x = 6;</code> // 打开盒子 x，扔掉 5，放入 6</p>
+<p>但在纯函数式编程和Rust的默认模式下，变量更像是一个数学上的**“永久标签”**。</p>
+<p><code>let x = 5;</code> // 这句话是一个永恒的断言：“x”这个名字，从此就代表值“5”。</p>
+<p>这个看似微小的区别，意义重大。当一个名字和值的关系是永恒的，代码就变成了可证明的逻辑推演。<code>add(x, 3)</code> 永远等于 <code>add(5, 3)</code>，程序行为变得完全可预测。</p>
+<h4 id="2-硬件视角变量是电路而非内存">2. 硬件视角：变量是“电路”，而非“内存”</h4>
+<p>命令式编程的“盒子”思维，完美对应了计算机的冯·诺依曼架构：CPU从内存中取数据，处理，再放回内存。</p>
+<p>但纯函数式编程的思维模型，更接近另一种硬件形态：<strong>数据流电路（Dataflow Circuit）</strong>。</p>
+<p>想象一个数字逻辑电路。一个输入信号（比如 <code>5V</code>，代表 <code>true</code>）通过一根导线进入一个“非门”（NOT gate）。输出端导线上产生的新信号是 <code>0V</code>（<code>false</code>）。你<strong>不能</strong>“改变”输入导线上的电压，你只能通过逻辑门（函数），产生一根带有<strong>新值</strong>的输出导线。</p>
+<p>在这里：</p>
+<ul>
+<li><strong>变量</strong> -&gt; <strong>导线（Wire）</strong>，承载着一个稳定的信号（值）。</li>
+<li><strong>函数</strong> -&gt; <strong>逻辑门（Logic Gate）</strong>，接收输入导线的信号，产生输出导线的信号。</li>
+</ul>
+<p>整个计算过程，就是一个巨大的、无状态的电路网络。数据从一端流入，经过一系列变换，从另一端流出。这种模型天然并行，因为没有共享的、可变的状态需要加锁。</p>
+<p>许多用于设计芯片（如FPGA、ASIC）的高级硬件描述语言（HDL），例如 <strong>Bluespec SystemVerilog</strong>，其核心思想就深受函数式编程的影响。它们将复杂的硬件行为描述为一系列无副作用的规则和函数，最终被“编译”成真实的物理电路。</p>
+<p>所以，当你写下 <code>let y = x + 1;</code> 时，与其想象成“又在内存里开辟了一个新盒子”，不如想象成“将 <code>x</code> 导线和 <code>1</code> 导线连接到一个加法器的输入端，从其输出端引出了一根新的导线，命名为 <code>y</code>”。</p>
+<h4 id="3-优化器魔法haskell如何将浪费变为极致高效">3. 优化器魔法：Haskell如何将“浪费”变为极致高效</h4>
+<p>好，即使在软件层面，这个“创建新值”的模式也并非浪费。纯函数式语言（如Haskell）的编译器，正是利用不可变性来施展魔法。</p>
+<p>假设我们有一个操作列表的函数：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-haskell" data-lang="haskell"><span style="display:flex;"><span><span style="color:#75715e">-- 将列表每个元素乘以2，然后再加1</span>
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">process</span> <span style="color:#f92672">::</span> [<span style="color:#66d9ef">Int</span>] <span style="color:#f92672">-&gt;</span> [<span style="color:#66d9ef">Int</span>]
+</span></span><span style="display:flex;"><span><span style="color:#a6e22e">process</span> xs <span style="color:#f92672">=</span> map (<span style="color:#f92672">+</span><span style="color:#ae81ff">1</span>) (map (<span style="color:#f92672">*</span><span style="color:#ae81ff">2</span>) xs)
+</span></span></code></pre></div><p>初学者可能会想，这里的执行过程是：</p>
+<ol>
+<li>遍历原始列表 <code>xs</code>，创建一个全新的、乘以2的中间列表 <code>temp_list</code>。</li>
+<li>遍历中间列表 <code>temp_list</code>，再创建一个全新的、加1的最终列表。</li>
+<li><code>temp_list</code> 被丢弃，造成了巨大的内存分配和计算浪费。</li>
+</ol>
+<p><strong>但Haskell编译器绝不会这么做！</strong></p>
+<p>由于 <code>map</code> 是纯函数，变量是不可变的，编译器拥有一个“上帝视角”。它能看透整个计算链，并意识到你真正想做的是对每个元素执行 <code>(*2)</code> <strong>然后</strong> <code>(+1)</code> 的操作。于是，它会施展一种叫做**“流融合（Stream Fusion）”**的优化。</p>
+<p>编译器会将 <code>map (+1)</code> 和 <code>map (*2)</code> 这两个操作**融合（Fuse）**成一个单一的循环。最终生成的机器码只会遍历列表一次，对每个元素直接计算 <code>(element * 2) + 1</code>，然后直接放入最终结果。<strong>那个看似存在的中间列表，在运行时从未被创建过！</strong></p>
+<p>不可变性，给了编译器进行这种激进重组和优化的信心和能力。</p>
+<h4 id="4-回到rust所有权机制的底层智慧">4. 回到Rust：所有权机制的底层智慧</h4>
+<p>Rust吸收了函数式编程的精髓，并将其与对内存的底层控制完美结合。它通过**所有权（Ownership）<strong>和</strong>移动（Move）**语义，漂亮地解决了“浪费”问题。</p>
+<p>当你写下这段代码：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#66d9ef">let</span> s1 <span style="color:#f92672">=</span> String::from(<span style="color:#e6db74">&#34;hello&#34;</span>);
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> s2 <span style="color:#f92672">=</span> s1; <span style="color:#75715e">// s1 的所有权被“移动”到 s2
+</span></span></span></code></pre></div><p>这里发生了什么？</p>
+<ul>
+<li><strong>不是内存拷贝</strong>：<code>&quot;hello&quot;</code> 这段数据在堆上只有一份。</li>
+<li><strong>是所有权转移</strong>：<code>s1</code> 这个“标签”在编译时失效了。现在只有 <code>s2</code> 这个“标签”指向那块数据。编译器会阻止你再使用 <code>s1</code>。</li>
+</ul>
+<p>这是一种编译时的、零成本的抽象。它允许我们写出逻辑上是“数据传递”的代码，而底层实现往往只是几个指针的赋值。</p>
+<p>更进一步，当函数返回一个新创建的值时，编译器经常会执行<strong>返回值优化（Return Value Optimization, RVO）</strong>。</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">create_big_vec</span>() -&gt; Vec<span style="color:#f92672">&lt;</span><span style="color:#66d9ef">i32</span><span style="color:#f92672">&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> <span style="color:#66d9ef">mut</span> v <span style="color:#f92672">=</span> Vec::new();
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// ... 填充大量数据 ...
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    v <span style="color:#75715e">// 返回 v
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">let</span> my_vec <span style="color:#f92672">=</span> create_big_vec();
+</span></span></code></pre></div><p>逻辑上，函数在自己的栈帧里创建了 <code>v</code>，然后应该把这个巨大的 <code>Vec</code> 拷贝出来给 <code>my_vec</code>。但实际上，编译器足够聪明，它会提前为 <code>my_vec</code> 分配好空间，然后让 <code>create_big_vec</code> 直接在那块内存上构建 <code>Vec</code>。<strong>从头到尾，数据没有发生任何移动或拷贝。</strong></p>
+<h3 id="结论远见卓识的权衡">结论：远见卓识的权衡</h3>
+<p>Rust和纯函数式语言的不可变性，是一种深刻的权衡。它用一个看似的“不便”，换来了：</p>
+<ol>
+<li><strong>代码的逻辑清晰性</strong>：像数学一样严谨，易于推理，从根源上消灭了大量由状态突变引起的Bug。</li>
+<li><strong>无畏的并发能力</strong>：天然地映射到数据流模型，让多核并行变得简单安全。</li>
+<li><strong>惊人的优化潜力</strong>：赋予编译器重构代码、消除中间步骤、实现零成本抽象的权力。</li>
+</ol>
+<p>所以，下次当你写下 <code>let</code> 时，请自豪。你不是在选择一种“受限”的编程方式，而是在利用一种更高级的抽象，让编译器成为你最强大的盟友，共同写出既安全又极致高效的未来软件。</p></article>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script type="application/javascript" src='https://b.0721.me/js/toc.js'></script>
+<link rel="stylesheet" href='https://b.0721.me/css/toc.css' />
+
+  
+</div>
+
+  <div class="footer container-xl width-full p-responsive">
+  <div
+    class="position-relative d-flex flex-row-reverse flex-lg-row flex-wrap flex-lg-nowrap flex-justify-center flex-lg-justify-between flex-sm-items-center pt-6 pb-2 mt-6 f6 text-gray border-top border-gray-light ">
+    <a aria-label="Homepage" title="GitHub" class="footer-octicon d-none d-lg-block mr-lg-4" href="https://b.0721.me/">
+      <svg height="24" class="octicon octicon-mark-github" viewBox="0 0 16 16" version="1.1" width="24">
+        <path fill-rule="evenodd"
+          d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+        </path>
+      </svg>
+    </a>
+    <ul class="list-style-none d-flex flex-wrap col-12 flex-justify-center flex-lg-justify-between mb-2 mb-lg-0">
+      
+      <li class="mr-3 mr-lg-0">Theme by <a href='https://github.com/MeiK2333/github-style'>github-style</a></li>
+      
+      <li class="mr-3 mr-lg-0">GitHub and the Invertocat logo are trademarks of <a href="https://github.com/">GitHub, Inc.</a></li>
+    </ul>
+  </div>
+  <div class="d-flex flex-justify-center pb-6">
+    <span class="f6 text-gray-light"></span>
+  </div>
+
+
+</div>
+
+</body>
+
+<script type="application/javascript" src="https://b.0721.me/js/github-style.js"></script>
+
+
+
+
+
+
+
+</html>

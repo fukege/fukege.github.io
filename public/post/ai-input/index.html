@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <script type="application/javascript" src='https://b.0721.me/js/theme-mode.js'></script>
+    <link rel="stylesheet" href='https://b.0721.me/css/frameworks.min.css' />
+    <link rel="stylesheet" href='https://b.0721.me/css/github.min.css' />
+    <link rel="stylesheet" href='https://b.0721.me/css/github-style.css' />
+    <link rel="stylesheet" href='https://b.0721.me/css/light.css' />
+    <link rel="stylesheet" href='https://b.0721.me/css/dark.css' />
+    <link rel="stylesheet" href='https://b.0721.me/css/syntax.css' />
+    <title>给输入法接入AI语言大模型 - My Blog</title>
+    
+    <link rel="icon" type="image/x-icon" href='/images/avatar.png'>
+    
+    <meta name="theme-color" content="#1e2327">
+
+    
+    
+
+    
+    <meta name="description"
+  content="在开源输入法Rime中尝试使用LLM增强准确性
+" />
+<meta name="keywords"
+  content='blog, google analytics' />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://b.0721.me/post/ai-input/" />
+
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="给输入法接入AI语言大模型 - My Blog" />
+<meta name="twitter:description"
+  content="在开源输入法Rime中尝试使用LLM增强准确性
+" />
+<meta name="twitter:site" content="https://b.0721.me/" />
+<meta name="twitter:creator" content="" />
+<meta name="twitter:image"
+  content="https://b.0721.me/">
+
+
+<meta property="og:type" content="article" />
+<meta property="og:title" content="给输入法接入AI语言大模型 - My Blog">
+<meta property="og:description"
+  content="在开源输入法Rime中尝试使用LLM增强准确性
+" />
+<meta property="og:url" content="https://b.0721.me/post/ai-input/" />
+<meta property="og:site_name" content="给输入法接入AI语言大模型" />
+<meta property="og:image"
+  content="https://b.0721.me/">
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+<meta property="article:published_time" content="2025-08-07 15:36:57 &#43;0800 &#43;0800" />
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body>
+  <div style="position: relative">
+  <header class="Header js-details-container Details px-3 px-md-4 px-lg-5 flex-wrap flex-md-nowrap open Details--on">
+    <div class="Header-item mobile-none" style="margin-top: -4px; margin-bottom: -4px;">
+      <a class="Header-link" href="https://b.0721.me/">
+        <img class="octicon" height="32" width="32" src="/images/avatar.png">
+      </a>
+    </div>
+    <div class="Header-item d-md-none">
+      <button class="Header-link btn-link js-details-target" type="button"
+        onclick="document.querySelector('#header-search').style.display = document.querySelector('#header-search').style.display == 'none'? 'block': 'none'">
+        <svg height="24" class="octicon octicon-three-bars" viewBox="0 0 16 16" version="1.1" width="24">
+          <path fill-rule="evenodd" d="M1 2.75A.75.75 0 011.75 2h12.5a.75.75 0 110 1.5H1.75A.75.75 0 011 2.75zm0 5A.75.75 0 011.75 7h12.5a.75.75 0 110 1.5H1.75A.75.75 0 011 7.75zM1.75 12a.75.75 0 100 1.5h12.5a.75.75 0 100-1.5H1.75z">
+          </path>
+        </svg>
+      </button>
+    </div>
+    <div style="display: none;" id="header-search"
+      class="Header-item Header-item--full flex-column flex-md-row width-full flex-order-2 flex-md-order-none mr-0 mr-md-3 mt-3 mt-md-0 Details-content--hidden-not-important d-md-flex">
+      <div
+        class="Header-search header-search flex-auto js-site-search position-relative flex-self-stretch flex-md-self-auto mb-3 mb-md-0 mr-0 mr-md-3 scoped-search site-scoped-search js-jump-to">
+        <div class="position-relative">
+          
+          <form target="_blank" action="https://www.google.com/search" accept-charset="UTF-8" method="get"
+            autocomplete="off">
+            <label
+              class="Header-search-label form-control input-sm header-search-wrapper p-0 js-chromeless-input-container header-search-wrapper-jump-to position-relative d-flex flex-justify-between flex-items-center">
+              <input type="text"
+                class="Header-search-input form-control input-sm header-search-input jump-to-field js-jump-to-field js-site-search-focus js-site-search-field is-clearable"
+                name="q" value="" placeholder="Search" autocomplete="off">
+              <input type="hidden" name="q" value="site:https://b.0721.me/">
+            </label>
+          </form>
+          
+        </div>
+      </div>
+    </div>
+
+    <div class="Header-item Header-item--full flex-justify-center d-md-none position-relative">
+      <a class="Header-link " href="https://b.0721.me/">
+        <img class="octicon octicon-mark-github v-align-middle" height="32" width="32" src="/images/avatar.png">
+      </a>
+    </div>
+    <div class="Header-item" style="margin-right: 0;">
+      <a href="javascript:void(0)" class="Header-link no-select" onclick="switchTheme()">
+        <svg style="fill: var(--color-profile-color-modes-toggle-moon);" class="no-select" viewBox="0 0 16 16"
+          version="1.1" width="16" height="16">
+          <path fill-rule="evenodd" clip-rule="evenodd"
+            d="M4.52208 7.71754C7.5782 7.71754 10.0557 5.24006 10.0557 2.18394C10.0557 1.93498 10.0392 1.68986 10.0074 1.44961C9.95801 1.07727 10.3495 0.771159 10.6474 0.99992C12.1153 2.12716 13.0615 3.89999 13.0615 5.89383C13.0615 9.29958 10.3006 12.0605 6.89485 12.0605C3.95334 12.0605 1.49286 10.001 0.876728 7.24527C0.794841 6.87902 1.23668 6.65289 1.55321 6.85451C2.41106 7.40095 3.4296 7.71754 4.52208 7.71754Z">
+          </path>
+        </svg>
+      </a>
+    </div>
+  </header>
+</div>
+
+  <div id="search-result" class="container-lg px-3 new-discussion-timeline" style="display: none;">
+</div>
+
+  
+<div class="application-main">
+  <div>
+  <main>
+    <div class="gisthead pagehead bg-gray-light pb-0 pt-3 mb-4">
+      <div class="px-0">
+        <div class="mb-3 d-flex px-3 px-md-3 px-lg-5">
+          <div class="flex-auto min-width-0 width-fit mr-3">
+            <div class="d-flex">
+              <div class="d-none d-md-block">
+                <a class="avatar mr-2 flex-shrink-0" href="https://b.0721.me/">
+                  <img class=" avatar-user"
+                    src="/images/avatar.png"
+                    width="32" height="32"></a>
+              </div>
+              <div class="d-flex flex-column">
+                <h1 class="break-word f3 text-normal mb-md-0 mb-1">
+                  <span class="author">
+                    <a href="https://b.0721.me/">Fukege</a>
+                  </span>
+                  <span class="path-divider">/</span>
+                  <strong class="css-truncate css-truncate-target mr-1" style="max-width: 410px">
+                    <a href="https://b.0721.me/post/ai-input/">给输入法接入AI语言大模型</a>
+                  </strong>
+                </h1>
+                <div class="note m-0">
+                  Created <relative-time datetime="Thu, 07 Aug 2025 15:36:57 &#43;0800"
+                    class="no-wrap">
+                    Thu, 07 Aug 2025 15:36:57 &#43;0800</relative-time>
+
+                  
+                  <span class="file-info-divider"></span>
+                  Modified <relative-time datetime="Thu, 07 Aug 2025 15:36:57 &#43;0800"
+                    class="no-wrap">
+                    Thu, 07 Aug 2025 15:36:57 &#43;0800</relative-time>
+                  
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-lg px-3 new-discussion-timeline">
+      <div class="repository-content gist-content">
+        <div>
+          <div class="js-gist-file-update-container js-task-list-container file-box">
+            <div id="file-pytest" class="file my-2">
+              <div id="post-header" class="file-header d-flex flex-md-items-center flex-items-start sticky-header" style="z-index: 2">
+                <div class="file-info d-flex flex-md-items-center flex-items-start flex-order-1 flex-auto">
+                  <div class="text-mono f6 flex-auto pr-3 flex-order-2 flex-md-order-1 mt-2 mt-md-0">
+                    
+                    <summary id="toc-toggle" onclick="clickToc()" class="btn btn-octicon m-0 mr-2 p-2">
+                      <svg aria-hidden="true" viewBox="0 0 16 16" height="16" width="16" class="octicon octicon-list-unordered">
+                        <path fill-rule="evenodd" d="M2 4a1 1 0 100-2 1 1 0 000 2zm3.75-1.5a.75.75 0 000 1.5h8.5a.75.75 0 000-1.5h-8.5zm0 5a.75.75 0 000 1.5h8.5a.75.75 0 000-1.5h-8.5zm0 5a.75.75 0 000 1.5h8.5a.75.75 0 000-1.5h-8.5zM3 8a1 1 0 11-2 0 1 1 0 012 0zm-1 6a1 1 0 100-2 1 1 0 000 2z"></path>
+                      </svg>
+                    </summary>
+                    <details-menu class="SelectMenu" id="toc-details" style="display: none;">
+                      <div class="SelectMenu-modal rounded-3 mt-1" style="max-height: 340px;">
+                        <div class="SelectMenu-list SelectMenu-list--borderless p-2" style="overscroll-behavior: contain;" id="toc-list">
+                        </div>
+                      </div>
+                    </details-menu>
+                      2176 Words
+                    
+
+                  </div>
+                  <div class="file-actions flex-order-2 pt-0">
+                    
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="Box-body px-5 pb-5" style="z-index: 1">
+                <article class="markdown-body entry-content container-lg"><p>在开源输入法Rime中尝试使用LLM增强准确性</p>
+<h1 id="给输入法接入ai语言大模型">给输入法接入AI语言大模型</h1>
+<h2 id="背景">背景</h2>
+<p>自从看到网上各家输入法被爆出隐私问题后，我就开始使用Rime这个开源输入法，配置难对我来说不是问题，但是它的输入效果比不上国内商业输入法的，输入的一长，它的展示的句子就毫无逻辑，于是我就养成了逐个词输入的习惯，特别慢，每次要看一遍词语再选择</p>
+<h2 id="第一次尝试微调大模型">第一次尝试：微调大模型</h2>
+<p>接入语言大模型就是最好的解决方法很早开始我就思考过这个项目，知道上个月才开始尝试，最开始我收集了2万条数据微调Qwen2.5 7B大模型，想让他输入拼音，返回中文</p>
+<p><strong>不得不说阿里云的百炼平台提供了特别方便的服务，只要提供好数据喂进去，我当时训练时根本没写一点代码就完成了，价格也在可接受范围内</strong></p>
+<p>优惠链接：
+<a href="https://dashi.aliyun.com/activity/aigc?userCode=a7qtiysh">阿里云部署AI应用</a>
+<a href="https://www.aliyun.com/daily-act/ecs/ecs25srdeepseek?userCode=a7qtiysh">部署大模型</a></p>
+<p>我花了40多训练了7个多小时，得到了这样的模型：</p>
+<ul>
+<li>幻觉极重，输入的拼音与输出的不匹配，你可以试试让deepseek当你的输入法，就可以得到相同的效果</li>
+<li>延迟很大，因为大模型的参数很大，本来就是不合适的</li>
+</ul>
+<p>我咨询了AI它让我整理数据继续微调，后面我并没有照做，而是察觉到模型架构应该改变</p>
+<p><strong>不过，当时我还没弄清楚这种架构根本不现实</strong></p>
+<h2 id="第二次尝试从零开始训练">第二次尝试：从零开始训练</h2>
+<p>继续根据AI的建议，更换了Seq2Seq的架构，并指导我训练这个模型，所有的训练代码都是AI生成的，我只负责数据处理部分，最后我得到了一个大概20M参数量的输入拼音序列，返回中文的模型，效果还不错，至少没有幻觉了，长句输入也不错</p>
+<p>在开始前我还微调了一个Seq2Seq模型，结果模型通过填充<!-- raw HTML omitted -->作弊，更是废物，于是才完全抛弃了微调模型这条路</p>
+<p><strong>到这里我还没弄清楚这种架构根本不现实</strong></p>
+<p>刚才的模型没有缓存的功能，没办法适应输入又删除的场景，于是又搞来一遍，但是忘记叫AI写代码时确定参数量了，10M参数量的模型幻觉又出现了。每次训练真的很麻烦，加上分词器的设计混乱，我又开始考虑新的架构</p>
+<h2 id="接近成功">接近成功</h2>
+<p>一步一步的让AI给我设计新架构，我提到了词向量，于是这个最终架构就诞生了：</p>
+<p>使用语言大模型根据语境预测下一个词，然后计算输入法产生的候选词与这个词的相似度，这里参考了词向量的原理，使用向量相似度计算，这样就完美了，都不用设计新模型</p>
+<p>至于不用Logits计算的原因，是计算Logits要计算整个词汇表，非常浪费资源，要知道输入法对延迟要求极高</p>
+<p>实际上这也触及到了输入法和核心原理，到这里才弄明白只有这样才是正确的</p>
+<h3 id="rime原理简介">Rime原理简介</h3>
+<ol>
+<li>
+<p>字符接收与编码转换
+当用户敲击键盘时，前端程序会捕获按键事件，并将其发送给 Rime 引擎。引擎接收到按键后，会根据当前的输入方案，将其转化为内部的输入码（input code）。例如，用户敲下 &rsquo;s&rsquo; &lsquo;h&rsquo; &lsquo;u&rsquo; &lsquo;a&rsquo; &rsquo;n&rsquo; &lsquo;g&rsquo;，Rime 就会得到 shuang 这个字符串。</p>
+</li>
+<li>
+<p>拼写运算与音节切分</p>
+</li>
+</ol>
+<ul>
+<li>这是 Rime 最具特色的部分。内核会利用在编译阶段生成的“拼写运算”查找表，对输入码进行处理。</li>
+<li>音节切分： 如果输入方案是拼音，引擎会尝试将 shuang 切分为 shuang 这个音节。</li>
+<li>双拼或模糊音处理： 如果是双拼方案，shuang 可能会被映射为 u。如果是模糊音，zh 可能与 z 等价。</li>
+<li>这个阶段产生的结果是音节码（syllable code），它代表了用户想要表达的语音信息。</li>
+</ul>
+<ol start="3">
+<li>词典查询与候选项生成（Translator（翻译器））
+Rime 引擎拿着音节码，开始在编译好的词典索引中进行高速查询。</li>
+</ol>
+<ul>
+<li>全拼匹配： shuang 可能会匹配到“双”、“霜”、“爽”等词语。</li>
+<li>短语匹配： 如果用户输入 shuang xue，引擎会尝试匹配“双学”、“霜雪”等词组。
+这个阶段会返回一个候选项列表，包含了所有可能的词语和短语。</li>
+</ul>
+<ol start="4">
+<li>语言模型与排序（Filter（过滤器））
+Rime 引擎会使用一个简化的语言模型来对候选项进行排序。这个模型会考虑：</li>
+</ol>
+<ul>
+<li>词频： 出现频率高的词语会被优先排序。</li>
+<li>用户词典： 用户自定义的词语和短语会具有最高的优先级。</li>
+<li>上下文： 如果用户已经输入了一部分句子，Rime 会根据前文来预测后文，并调整排序。
+经过排序后，Rime 引擎将最终的候选项列表发送回前端，由前端负责将其渲染到屏幕上。</li>
+</ul>
+<p>也就是这个语言模型太过拉跨的原因，我的决定是正确的</p>
+<h2 id="最后">最后</h2>
+<p>最后推理代码也是AI写的，虽然AI在大型项目上很拉跨，但写一个Python小脚本还是很方便的，速度很快，只要我们的提示词够精准，把步骤列表列好</p>
+<p>别看这个项目只有很少的代码，实际上我的电脑里面已经又十几版这个项目的不同实现了，有Python和Rust的，但拿得出手的只有这个了</p>
+<p>审查AI的代码也是很头疼的问题呀，还有写提示词，而且要反复重来无数次，接入Rime的部分实在是没有精力来做了，留个原型在这吧</p>
+<p>希望：</p>
+<ul>
+<li>组建一个社区来发展和维护项目</li>
+<li>用一种静态语言重写，更希望Rust，因为关于AI的生态好包管理也很方便，C++也行吧，但是我第一次尝试重写这个项目的时候被C++的包管理逼疯了，后面就转向Rust，当然也没有写成</li>
+<li>来个人把这东西接入Rime</li>
+</ul>
+<h2 id="2025119-更新">2025.11.9 更新</h2>
+<p>社区没有人能够提供支持，因此我开始使用rust自己实现，我对API不熟悉，所以代码都是AI，不过我会认真审查，而Rust的安全性也非常适合AI编程，几天就整出核心功能了。但是Rime文档稀缺，我没写过C++项目，被编译失败劝退了好久。</p>
+<p>直到到最我才重新构想，使用更加简单的llama.cpp为推理引擎，它的API也比原先的ort好写，于是只用写一个类就实现了原来一大堆代码的功能。但是又给报了难以找到问题的段错误</p></article>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script type="application/javascript" src='https://b.0721.me/js/toc.js'></script>
+<link rel="stylesheet" href='https://b.0721.me/css/toc.css' />
+
+  
+</div>
+
+  <div class="footer container-xl width-full p-responsive">
+  <div
+    class="position-relative d-flex flex-row-reverse flex-lg-row flex-wrap flex-lg-nowrap flex-justify-center flex-lg-justify-between flex-sm-items-center pt-6 pb-2 mt-6 f6 text-gray border-top border-gray-light ">
+    <a aria-label="Homepage" title="GitHub" class="footer-octicon d-none d-lg-block mr-lg-4" href="https://b.0721.me/">
+      <svg height="24" class="octicon octicon-mark-github" viewBox="0 0 16 16" version="1.1" width="24">
+        <path fill-rule="evenodd"
+          d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+        </path>
+      </svg>
+    </a>
+    <ul class="list-style-none d-flex flex-wrap col-12 flex-justify-center flex-lg-justify-between mb-2 mb-lg-0">
+      
+      <li class="mr-3 mr-lg-0">Theme by <a href='https://github.com/MeiK2333/github-style'>github-style</a></li>
+      
+      <li class="mr-3 mr-lg-0">GitHub and the Invertocat logo are trademarks of <a href="https://github.com/">GitHub, Inc.</a></li>
+    </ul>
+  </div>
+  <div class="d-flex flex-justify-center pb-6">
+    <span class="f6 text-gray-light"></span>
+  </div>
+
+
+</div>
+
+</body>
+
+<script type="application/javascript" src="https://b.0721.me/js/github-style.js"></script>
+
+
+
+
+
+
+
+</html>

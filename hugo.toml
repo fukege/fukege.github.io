@@ -1,0 +1,19 @@
+baseURL = 'https://b.0721.me/'
+languageCode = 'zh-cn'
+title = 'My Blog'
+theme = 'github-style'
+
+[params]
+  author = "Fukege"
+  description = ""
+  github = "fukege"
+  # email = "meik2333@gmail.com"
+  url = "https://b.0721.me"
+  keywords = "blog, google analytics"
+  rss = true
+  lastmod = true
+  userStatusEmoji = "🤔"
+  favicon = "/images/avatar.png"
+  avatar = "/images/avatar.png"
+  headerIcon = "/images/avatar.png"
+  location = "China"

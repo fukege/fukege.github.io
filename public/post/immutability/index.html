@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <script type="application/javascript" src='https://b.0721.me/js/theme-mode.js'></script>
+    <link rel="stylesheet" href='https://b.0721.me/css/frameworks.min.css' />
+    <link rel="stylesheet" href='https://b.0721.me/css/github.min.css' />
+    <link rel="stylesheet" href='https://b.0721.me/css/github-style.css' />
+    <link rel="stylesheet" href='https://b.0721.me/css/light.css' />
+    <link rel="stylesheet" href='https://b.0721.me/css/dark.css' />
+    <link rel="stylesheet" href='https://b.0721.me/css/syntax.css' />
+    <title>理解Rust和纯函数式语言的变量不可变性 - My Blog</title>
+    
+    <link rel="icon" type="image/x-icon" href='/images/avatar.png'>
+    
+    <meta name="theme-color" content="#1e2327">
+
+    
+    
+
+    
+    <meta name="description"
+  content="Rust与纯函数式编程的不可变性：超越内存的视角
+" />
+<meta name="keywords"
+  content='blog, google analytics' />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://b.0721.me/post/immutability/" />
+
+
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="理解Rust和纯函数式语言的变量不可变性 - My Blog" />
+<meta name="twitter:description"
+  content="Rust与纯函数式编程的不可变性：超越内存的视角
+" />
+<meta name="twitter:site" content="https://b.0721.me/" />
+<meta name="twitter:creator" content="" />
+<meta name="twitter:image"
+  content="https://b.0721.me/">
+
+
+<meta property="og:type" content="article" />
+<meta property="og:title" content="理解Rust和纯函数式语言的变量不可变性 - My Blog">
+<meta property="og:description"
+  content="Rust与纯函数式编程的不可变性：超越内存的视角
+" />
+<meta property="og:url" content="https://b.0721.me/post/immutability/" />
+<meta property="og:site_name" content="理解Rust和纯函数式语言的变量不可变性" />
+<meta property="og:image"
+  content="https://b.0721.me/">
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+<meta property="article:published_time" content="2025-10-26 01:57:24 &#43;0800 &#43;0800" />
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+
+<body>
+  <div style="position: relative">
+  <header class="Header js-details-container Details px-3 px-md-4 px-lg-5 flex-wrap flex-md-nowrap open Details--on">
+    <div class="Header-item mobile-none" style="margin-top: -4px; margin-bottom: -4px;">
+      <a class="Header-link" href="https://b.0721.me/">
+        <img class="octicon" height="32" width="32" src="/images/avatar.png">
+      </a>
+    </div>
+    <div class="Header-item d-md-none">
+      <button class="Header-link btn-link js-details-target" type="button"
+        onclick="document.querySelector('#header-search').style.display = document.querySelector('#header-search').style.display == 'none'? 'block': 'none'">
+        <svg height="24" class="octicon octicon-three-bars" viewBox="0 0 16 16" version="1.1" width="24">
+          <path fill-rule="evenodd" d="M1 2.75A.75.75 0 011.75 2h12.5a.75.75 0 110 1.5H1.75A.75.75 0 011 2.75zm0 5A.75.75 0 011.75 7h12.5a.75.75 0 110 1.5H1.75A.75.75 0 011 7.75zM1.75 12a.75.75 0 100 1.5h12.5a.75.75 0 100-1.5H1.75z">
+          </path>
+        </svg>
+      </button>
+    </div>
+    <div style="display: none;" id="header-search"
+      class="Header-item Header-item--full flex-column flex-md-row width-full flex-order-2 flex-md-order-none mr-0 mr-md-3 mt-3 mt-md-0 Details-content--hidden-not-important d-md-flex">
+      <div
+        class="Header-search header-search flex-auto js-site-search position-relative flex-self-stretch flex-md-self-auto mb-3 mb-md-0 mr-0 mr-md-3 scoped-search site-scoped-search js-jump-to">
+        <div class="position-relative">
+          
+          <form target="_blank" action="https://www.google.com/search" accept-charset="UTF-8" method="get"
+            autocomplete="off">
+            <label
+              class="Header-search-label form-control input-sm header-search-wrapper p-0 js-chromeless-input-container header-search-wrapper-jump-to position-relative d-flex flex-justify-between flex-items-center">
+              <input type="text"
+                class="Header-search-input form-control input-sm header-search-input jump-to-field js-jump-to-field js-site-search-focus js-site-search-field is-clearable"
+                name="q" value="" placeholder="Search" autocomplete="off">
+              <input type="hidden" name="q" value="site:https://b.0721.me/">
+            </label>
+          </form>
+          
+        </div>
+      </div>
+    </div>
+
+    <div class="Header-item Header-item--full flex-justify-center d-md-none position-relative">
+      <a class="Header-link " href="https://b.0721.me/">
+        <img class="octicon octicon-mark-github v-align-middle" height="32" width="32" src="/images/avatar.png">
+      </a>
+    </div>
+    <div class="Header-item" style="margin-right: 0;">
+      <a href="javascript:void(0)" class="Header-link no-select" onclick="switchTheme()">
+        <svg style="fill: var(--color-profile-color-modes-toggle-moon);" class="no-select" viewBox="0 0 16 16"
+          version="1.1" width="16" height="16">
+          <path fill-rule="evenodd" clip-rule="evenodd"
+            d="M4.52208 7.71754C7.5782 7.71754 10.0557 5.24006 10.0557 2.18394C10.0557 1.93498 10.0392 1.68986 10.0074 1.44961C9.95801 1.07727 10.3495 0.771159 10.6474 0.99992C12.1153 2.12716 13.0615 3.89999 13.0615 5.89383C13.0615 9.29958 10.3006 12.0605 6.89485 12.0605C3.95334 12.0605 1.49286 10.001 0.876728 7.24527C0.794841 6.87902 1.23668 6.65289 1.55321 6.85451C2.41106 7.40095 3.4296 7.71754 4.52208 7.71754Z">
+          </path>
+        </svg>
+      </a>
+    </div>
+  </header>
+</div>
+
+  <div id="search-result" class="container-lg px-3 new-discussion-timeline" style="display: none;">
+</div>
+
+  
+<div class="application-main">
+  <div>
+  <main>
+    <div class="gisthead pagehead bg-gray-light pb-0 pt-3 mb-4">
+      <div class="px-0">
+        <div class="mb-3 d-flex px-3 px-md-3 px-lg-5">
+          <div class="flex-auto min-width-0 width-fit mr-3">
+            <div class="d-flex">
+              <div class="d-none d-md-block">
+                <a class="avatar mr-2 flex-shrink-0" href="https://b.0721.me/">
+                  <img class=" avatar-user"
+                    src="/images/avatar.png"
+                    width="32" height="32"></a>
+              </div>
+              <div class="d-flex flex-column">
+                <h1 class="break-word f3 text-normal mb-md-0 mb-1">
+                  <span class="author">
+                    <a href="https://b.0721.me/">Fukege</a>
+                  </span>
+                  <span class="path-divider">/</span>
+                  <strong class="css-truncate css-truncate-target mr-1" style="max-width: 410px">
+                    <a href="https://b.0721.me/post/immutability/">理解Rust和纯函数式语言的变量不可变性</a>
+                  </strong>
+                </h1>
+                <div class="note m-0">
+                  Created <relative-time datetime="Sun, 26 Oct 2025 01:57:24 &#43;0800"
+                    class="no-wrap">
+                    Sun, 26 Oct 2025 01:57:24 &#43;0800</relative-time>
+
+                  
+                  <span class="file-info-divider"></span>
+                  Modified <relative-time datetime="Sun, 26 Oct 2025 01:57:24 &#43;0800"
+                    class="no-wrap">
+                    Sun, 26 Oct 2025 01:57:24 &#43;0800</relative-time>
+                  
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="container-lg px-3 new-discussion-timeline">
+      <div class="repository-content gist-content">
+        <div>
+          <div class="js-gist-file-update-container js-task-list-container file-box">
+            <div id="file-pytest" class="file my-2">
+              <div id="post-header" class="file-header d-flex flex-md-items-center flex-items-start sticky-header" style="z-index: 2">
+                <div class="file-info d-flex flex-md-items-center flex-items-start flex-order-1 flex-auto">
+                  <div class="text-mono f6 flex-auto pr-3 flex-order-2 flex-md-order-1 mt-2 mt-md-0">
+                    
+                    <summary id="toc-toggle" onclick="clickToc()" class="btn btn-octicon m-0 mr-2 p-2">
+                      <svg aria-hidden="true" viewBox="0 0 16 16" height="16" width="16" class="octicon octicon-list-unordered">
+                        <path fill-rule="evenodd" d="M2 4a1 1 0 100-2 1 1 0 000 2zm3.75-1.5a.75.75 0 000 1.5h8.5a.75.75 0 000-1.5h-8.5zm0 5a.75.75 0 000 1.5h8.5a.75.75 0 000-1.5h-8.5zm0 5a.75.75 0 000 1.5h8.5a.75.75 0 000-1.5h-8.5zM3 8a1 1 0 11-2 0 1 1 0 012 0zm-1 6a1 1 0 100-2 1 1 0 000 2z"></path>
+                      </svg>
+                    </summary>
+                    <details-menu class="SelectMenu" id="toc-details" style="display: none;">
+                      <div class="SelectMenu-modal rounded-3 mt-1" style="max-height: 340px;">
+                        <div class="SelectMenu-list SelectMenu-list--borderless p-2" style="overscroll-behavior: contain;" id="toc-list">
+                        </div>
+                      </div>
+                    </details-menu>
+                      2002 Words
+                    
+
+                  </div>
+                  <div class="file-actions flex-order-2 pt-0">
+                    
+                  </div>
+                </div>
+              </div>
+
+
+              <div class="Box-body px-5 pb-5" style="z-index: 1">
+                <article class="markdown-body entry-content container-lg"><p>Rust与纯函数式编程的不可变性：超越内存的视角</p>
+<h2 id="rust-与纯函数式编程揭秘不可变性与数学之美">Rust 与纯函数式编程：揭秘不可变性与数学之美</h2>
+<p>在软件开发的世界中，性能、安全与并发性始终是核心议题。近年来，Rust 凭借其独特的内存安全模型和高性能，赢得了广泛关注。然而，深入理解 Rust 的设计哲学，特别是其对“不可变性”（Immutability）的推崇，需要我们回到计算机科学的基石——数学。</p>
+<hr>
+<h3 id="一不可变变量从数学符号到程序设计">一、不可变变量：从数学符号到程序设计</h3>
+<p>在大多数命令式编程语言（如 C++、Java）中，变量被视为指向内存地址的“标签”（Label），程序可以随时读取并修改该内存地址中的值。这是对底层硬件操作的直接映射。</p>
+<p>但在 Rust 和纯函数式编程（如 Haskell、Erlang）中，我们必须采纳一个更为严格和抽象的视角：<strong>函数是数学上的函数</strong>。</p>
+<h4 id="1-数学视角下的函数">1. 数学视角下的函数</h4>
+<p>在数学中，一个函数 $f(x)$ 接收输入 $x$，并精确地返回一个确定的输出 $y$。例如：$y = f(x) = x^2$。</p>
+<p>这里的关键性质是：<strong>输入 $x$ 一旦被定义，其值在函数执行过程中是恒定不变的</strong>。$x$ 代表一个固定的数值或符号，而非一个可变的容器。</p>
+<h4 id="2-程序设计中的不可变性">2. 程序设计中的不可变性</h4>
+<p>当我们声明一个不可变变量时（在 Rust 中默认就是如此，如 <code>let x = 10;</code>），我们应该将其视为一个<strong>数学符号的绑定</strong>，而非一个可操作的内存地址。</p>
+<ul>
+<li><strong>定义</strong>：不可变变量一旦与某个值绑定，这种绑定关系就不能被修改。它代表了一个永恒的真值。</li>
+<li><strong>底层机制</strong>：我们不需要关心变量是否在内存中被修改。如果我们需要一个不同的值，我们应该声明一个新的变量（即创建一个新的数学符号），而不是去修改旧符号的含义。</li>
+</ul>
+<p><strong>数学上的优势</strong>：</p>
+<p>这种设计带来巨大的优势：当一个函数接收不可变输入时，我们可以像数学家一样确信，在函数内部的任何位置，这个输入的值都不会在不经意间被另一个操作改变。这极大地简化了推理过程，消除了复杂的副作用（Side Effects）。</p>
+<blockquote>
+<p><strong>Rust 的幕后工作</strong>：虽然 Rust 不可变性的概念来源于纯函数式，但它在底层通过**所有权（Ownership）和借用（Borrowing）**机制，在编译期强制执行这一规则，从而避免了运行时的垃圾回收（GC）开销，同时保证了内存安全。</p></blockquote>
+<hr>
+<h3 id="二不可变性对并发和硬件的深刻影响">二、不可变性对并发和硬件的深刻影响</h3>
+<p>不可变性不仅是理论上的优雅，更是解决现代计算挑战的强大工具。</p>
+<h4 id="1-强大的并发能力concurrency">1. 强大的并发能力（Concurrency）</h4>
+<p>在命令式编程中，多线程共享可变数据是引发竞争条件（Race Conditions）和死锁（Deadlocks）的主要原因。</p>
+<p>如果数据是不可变的，那么多个线程可以<strong>安全地同时读取</strong>同一份数据，因为没有任何线程能修改它。我们无需昂贵的锁机制来保护数据，从而实现几乎无摩擦的并行计算。不可变性是实现高效并发的黄金法则。</p>
+<h4 id="2-硬件描述与优化能力">2. 硬件描述与优化能力</h4>
+<p>不可变性模型对低级系统编程和硬件描述具有惊人的映射能力。</p>
+<p>想象电路板上的一个逻辑门。一个输入信号（变量）进入，产生一个输出信号。如果输入信号的值需要改变，在物理电路上，我们并不会去“修改”旧信号，而是<strong>发射一个新的、具有新值的信号</strong>。</p>
+<p><strong>关键原理</strong>：</p>
+<ul>
+<li>当我们声明 <code>let y = x + 1;</code> 时，我们不是在修改 $x$，而是基于 $x$ 的值，在逻辑上创造了一个<strong>新的输出</strong> $y$。</li>
+<li>在硬件描述语言中，这直接对应于<strong>创建新的电路路径和新的输出端</strong>。</li>
+<li>每当变量的值“想改变”时，我们通过声明一个新变量来实现，这完美地模拟了电路中信号的传播和状态的更新。</li>
+</ul>
+<h4 id="3-编译器优化optimization">3. 编译器优化（Optimization）</h4>
+<p>基于不可变性，编译器可以动用强大的<strong>数学化简</strong>能力。</p>
+<p>如果编译器知道一个变量在整个作用域内都是不可变的，它就可以执行：</p>
+<ol>
+<li><strong>缓存计算结果（Memoization）</strong>：多次使用同一变量时，可以保证每次得到的结果相同，只需计算一次。</li>
+<li><strong>重排或消除操作</strong>：如果一个表达式的值不依赖于其他操作的副作用，编译器可以自由地重排执行顺序，甚至消除冗余的计算，实现如同代数运算般的化简。</li>
+</ol>
+<hr>
+<h3 id="三rust-特有的优雅隐式返回implicit-return">三、Rust 特有的优雅：隐式返回（Implicit Return）</h3>
+<p>在 Rust 的函数定义中，我们经常看到这样的结构：</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span><span style="color:#66d9ef">fn</span> <span style="color:#a6e22e">calculate_area</span>(width: <span style="color:#66d9ef">i32</span>, height: <span style="color:#66d9ef">i32</span>) -&gt; <span style="color:#66d9ef">i32</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">let</span> area <span style="color:#f92672">=</span> width <span style="color:#f92672">*</span> height;
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e">// 注意：没有分号，没有 &#39;return&#39; 关键字
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>    area 
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>Rust 函数的返回值规则简洁而强大：</p>
+<p><strong>如果一个表达式在行尾没有分号 <code>;</code> 结尾，那么这个表达式的值将作为函数的最终返回值。</strong></p>
+<h4 id="1-隐式返回的哲学">1. 隐式返回的哲学</h4>
+<p>这种设计进一步强化了“函数是数学表达式”的理念。在数学中，函数 $f(x)$ 的定义本身就是一个表达式。</p>
+<p>例如，定义 $f(x) = x^2$：</p>
+<ul>
+<li>我们不需要写成：“计算 $x^2$ 的值，然后把这个值返回。”</li>
+<li>我们只需写：“$f(x)$ <strong>就是</strong> $x^2$。”</li>
+</ul>
+<p>在 Rust 中，这允许开发者以更像表达式、更少的样板代码的方式书写逻辑，尤其在处理复杂的控制流（如 <code>if-else</code> 表达式或 <code>match</code> 语句）时，这种优势尤为突出，使代码更加简洁和富有表现力。</p>
+<hr>
+<h3 id="结论">结论</h3>
+<p>Rust 不可变性的设计并非一时兴起，它是对底层数学原理的回归与尊重。通过将变量视为数学符号而非可操作的内存，Rust 能够在编译期保障内存安全和数据完整性，同时赋予开发者无与伦比的并发能力、高效的硬件描述能力和强大的编译器优化空间。理解这种设计哲学，是精通 Rust 并驾驭其强大性能的关键。</p></article>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+<script type="application/javascript" src='https://b.0721.me/js/toc.js'></script>
+<link rel="stylesheet" href='https://b.0721.me/css/toc.css' />
+
+  
+</div>
+
+  <div class="footer container-xl width-full p-responsive">
+  <div
+    class="position-relative d-flex flex-row-reverse flex-lg-row flex-wrap flex-lg-nowrap flex-justify-center flex-lg-justify-between flex-sm-items-center pt-6 pb-2 mt-6 f6 text-gray border-top border-gray-light ">
+    <a aria-label="Homepage" title="GitHub" class="footer-octicon d-none d-lg-block mr-lg-4" href="https://b.0721.me/">
+      <svg height="24" class="octicon octicon-mark-github" viewBox="0 0 16 16" version="1.1" width="24">
+        <path fill-rule="evenodd"
+          d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z">
+        </path>
+      </svg>
+    </a>
+    <ul class="list-style-none d-flex flex-wrap col-12 flex-justify-center flex-lg-justify-between mb-2 mb-lg-0">
+      
+      <li class="mr-3 mr-lg-0">Theme by <a href='https://github.com/MeiK2333/github-style'>github-style</a></li>
+      
+      <li class="mr-3 mr-lg-0">GitHub and the Invertocat logo are trademarks of <a href="https://github.com/">GitHub, Inc.</a></li>
+    </ul>
+  </div>
+  <div class="d-flex flex-justify-center pb-6">
+    <span class="f6 text-gray-light"></span>
+  </div>
+
+
+</div>
+
+</body>
+
+<script type="application/javascript" src="https://b.0721.me/js/github-style.js"></script>
+
+
+
+
+
+
+
+</html>
